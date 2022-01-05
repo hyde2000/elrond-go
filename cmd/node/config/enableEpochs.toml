@@ -157,7 +157,7 @@
     FrontRunningProtectionEnableEpoch = 1000000
 
     # DisableOldTrieStorageEpoch represents the epoch when the old trie storage implementation will be disabled
-    DisableOldTrieStorageEpoch = 0
+    DisableOldTrieStorageEpoch = 1000000
 
     # IsPayableBySCEnableEpoch represents the epoch when a new flag isPayable by SC is enabled
     IsPayableBySCEnableEpoch = 1000000
@@ -175,7 +175,7 @@
     ESDTRegisterAndSetAllRolesEnableEpoch = 1000000
 
     # CorrectJailedNotUnstakedEpoch represents the epoch when the jailed validators will also be unstaked if the queue is empty
-    CorrectJailedNotUnstakedEmptyQueueEpoch = 0
+    CorrectJailedNotUnstakedEmptyQueueEpoch = 1000000
 
     # MaxNodesChangeEnableEpoch holds configuration for changing the maximum number of nodes and the enabling epoch
     MaxNodesChangeEnableEpoch = [
