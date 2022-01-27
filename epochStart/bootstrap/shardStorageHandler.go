@@ -188,6 +188,7 @@ func (ssh *shardStorageHandler) getProcessedAndPendingMiniBlocks(
 
 	header, ok := headers[string(epochStartShardData.FirstPendingMetaBlock)]
 	if !ok {
+		log.Warn("getProcessedAndPendingMiniBlocks", "headerHash", epochStartShardData.FirstPendingMetaBlock, "error", epochStart.ErrMissingHeader)
 		return nil, nil, epochStart.ErrMissingHeader
 	}
 	neededMeta, ok := header.(*block.MetaBlock)
@@ -243,11 +244,13 @@ func (ssh *shardStorageHandler) saveLastCrossNotarizedHeaders(meta *block.MetaBl
 
 	lastCrossMetaHdrHash := shardData.LastFinishedMetaBlock
 	if len(shardData.PendingMiniBlockHeaders) == 0 {
+		log.Debug("saveLastCrossNotarizedHeaders change lastCrossMetaHdrHash", "initial", shardData.LastFinishedMetaBlock, "final", shardData.FirstPendingMetaBlock)
 		lastCrossMetaHdrHash = shardData.FirstPendingMetaBlock
 	}
 
 	neededHdr, ok := headers[string(lastCrossMetaHdrHash)]
 	if !ok {
+		log.Warn("saveLastCrossNotarizedHeaders", "hash", lastCrossMetaHdrHash, "error", epochStart.ErrMissingHeader)
 		return nil, epochStart.ErrMissingHeader
 	}
 
