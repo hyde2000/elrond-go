@@ -38,6 +38,7 @@ func createGeneralSetupForTxTest(initialBalance *big.Int) (
 
 	enableEpochs := config.EnableEpochs{
 		OptimizeGasUsedInCrossMiniBlocksEnableEpoch: 10,
+		ScheduledMiniBlocksEnableEpoch:              integrationTests.ScheduledMiniBlocksEnableEpoch,
 	}
 
 	nodes := integrationTests.CreateNodesWithEnableEpochs(
