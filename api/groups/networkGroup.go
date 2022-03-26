@@ -38,7 +38,7 @@ type networkFacadeHandler interface {
 	GetAccountList() ([]*api.Account, error)
 	StatusMetrics() external.StatusMetricsHandler
 	GetAllIssuedESDTs(tokenType string) ([]string, error)
-	GetTokenSupply(token string) (string, error)
+	GetTokenSupply(token string) (*api.ESDTSupply, error)
 	IsInterfaceNil() bool
 }
 
@@ -295,7 +295,7 @@ func (ng *networkGroup) getESDTTokenSupply(c *gin.Context) {
 	c.JSON(
 		http.StatusOK,
 		shared.GenericAPIResponse{
-			Data:  gin.H{"supply": supply},
+			Data:  supply,
 			Error: "",
 			Code:  shared.ReturnCodeSuccess,
 		},

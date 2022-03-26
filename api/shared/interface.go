@@ -80,7 +80,7 @@ type FacadeHandler interface {
 	GetDelegatorsList() ([]*api.Delegator, error)
 	GetAccountList() ([]*api.Account, error)
 	StatusMetrics() external.StatusMetricsHandler
-	GetTokenSupply(token string) (string, error)
+	GetTokenSupply(token string) (*api.ESDTSupply, error)
 	GetAllIssuedESDTs(tokenType string) ([]string, error)
 	GetHeartbeats() ([]data.PubKeyHeartbeat, error)
 	GetQueryHandler(name string) (debug.QueryHandler, error)

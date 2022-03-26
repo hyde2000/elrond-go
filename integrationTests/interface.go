@@ -73,7 +73,7 @@ type Facade interface {
 	GetDelegatorsList() ([]*dataApi.Delegator, error)
 	GetAccountList() ([]*dataApi.Account, error)
 	GetAllIssuedESDTs(tokenType string) ([]string, error)
-	GetTokenSupply(token string) (string, error)
+	GetTokenSupply(token string) (*dataApi.ESDTSupply, error)
 	GetHeartbeats() ([]data.PubKeyHeartbeat, error)
 	StatusMetrics() external.StatusMetricsHandler
 	GetQueryHandler(name string) (debug.QueryHandler, error)

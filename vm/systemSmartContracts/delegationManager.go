@@ -1,4 +1,4 @@
-//go:generate protoc -I=proto -I=$GOPATH/src -I=$GOPATH/src/github.com/ElrondNetwork/protobuf/protobuf  --gogoslick_out=. delegation.proto
+//go:generate protoc -I=. -I=$GOPATH/src -I=$GOPATH/src/github.com/ElrondNetwork/protobuf/protobuf  --gogoslick_out=. delegation.proto
 package systemSmartContracts
 
 import (
@@ -110,7 +110,7 @@ func NewDelegationManagerSystemSC(args ArgsNewDelegationManager) (*delegationMan
 	log.Debug("delegationManager: enable epoch for delegation manager", "epoch", d.enableDelegationMgrEpoch)
 	log.Debug("delegationManager: enable epoch for validator to delegation", "epoch", d.validatorToDelegationEnableEpoch)
 
-	d.delegationMgrEnabled.Toggle(true)
+	d.delegationMgrEnabled.SetValue(true)
 
 	args.EpochNotifier.RegisterNotifyHandler(d)
 
@@ -598,7 +598,7 @@ func (d *delegationManager) EpochConfirmed(epoch uint32, _ uint64) {
 
 	debug.PrintStack()
 
-	d.flagValidatorToDelegation.Toggle(epoch >= d.validatorToDelegationEnableEpoch)
+	d.flagValidatorToDelegation.SetValue(epoch >= d.validatorToDelegationEnableEpoch)
 	log.Debug("delegationManagerSC: validator to delegation", "enabled", d.flagValidatorToDelegation.IsSet())
 }
 

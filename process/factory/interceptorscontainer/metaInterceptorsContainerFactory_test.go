@@ -16,6 +16,7 @@ import (
 	dataRetrieverMock "github.com/ElrondNetwork/elrond-go/testscommon/dataRetriever"
 	"github.com/ElrondNetwork/elrond-go/testscommon/p2pmocks"
 	stateMock "github.com/ElrondNetwork/elrond-go/testscommon/state"
+	storageStubs "github.com/ElrondNetwork/elrond-go/testscommon/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -80,12 +81,12 @@ func createMetaDataPools() dataRetriever.PoolsHolder {
 func createMetaStore() *mock.ChainStorerMock {
 	return &mock.ChainStorerMock{
 		GetStorerCalled: func(unitType dataRetriever.UnitType) storage.Storer {
-			return &testscommon.StorerStub{}
+			return &storageStubs.StorerStub{}
 		},
 	}
 }
 
-//------- NewInterceptorsContainerFactory
+// ------- NewInterceptorsContainerFactory
 
 func TestNewMetaInterceptorsContainerFactory_NilShardCoordinatorShouldErr(t *testing.T) {
 	t.Parallel()
@@ -404,7 +405,7 @@ func TestNewMetaInterceptorsContainerFactory_ShouldWorkWithSizeCheck(t *testing.
 	assert.False(t, icf.IsInterfaceNil())
 }
 
-//------- Create
+// ------- Create
 
 func TestMetaInterceptorsContainerFactory_CreateTopicMetablocksFailsShouldErr(t *testing.T) {
 	t.Parallel()
@@ -534,7 +535,7 @@ func TestMetaInterceptorsContainerFactory_With4ShardsShouldWork(t *testing.T) {
 	numInterceptorsShardHeadersForMetachain := noOfShards
 	numInterceptorsTransactionsForMetachain := noOfShards + 1
 	numInterceptorsMiniBlocksForMetachain := noOfShards + 1 + 1
-	numInterceptorsUnsignedTxsForMetachain := noOfShards
+	numInterceptorsUnsignedTxsForMetachain := noOfShards + 1
 	numInterceptorsRewardsTxsForMetachain := noOfShards
 	numInterceptorsTrieNodes := 2
 	totalInterceptors := numInterceptorsMetablock + numInterceptorsShardHeadersForMetachain + numInterceptorsTrieNodes +

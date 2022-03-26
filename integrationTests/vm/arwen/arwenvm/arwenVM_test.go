@@ -1,3 +1,4 @@
+//go:build !race
 // +build !race
 
 // TODO remove build condition above to allow -race -short, after Arwen fix
@@ -7,6 +8,7 @@ package arwenvm
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
 	"math/big"
 	"testing"
 	"time"
@@ -19,9 +21,12 @@ import (
 	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/ElrondNetwork/elrond-go/common"
 	"github.com/ElrondNetwork/elrond-go/common/forking"
+	"github.com/ElrondNetwork/elrond-go/config"
+	"github.com/ElrondNetwork/elrond-go/integrationTests"
 	"github.com/ElrondNetwork/elrond-go/integrationTests/mock"
 	"github.com/ElrondNetwork/elrond-go/integrationTests/vm"
 	"github.com/ElrondNetwork/elrond-go/integrationTests/vm/arwen"
+	"github.com/ElrondNetwork/elrond-go/integrationTests/vm/txsFee/utils"
 	"github.com/ElrondNetwork/elrond-go/process"
 	"github.com/ElrondNetwork/elrond-go/process/coordinator"
 	"github.com/ElrondNetwork/elrond-go/process/factory"
@@ -32,6 +37,7 @@ import (
 	vmcommon "github.com/ElrondNetwork/elrond-vm-common"
 	"github.com/ElrondNetwork/elrond-vm-common/builtInFunctions"
 	"github.com/ElrondNetwork/elrond-vm-common/parsers"
+	"github.com/ElrondNetwork/elrond-vm-common/txDataBuilder"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -62,14 +68,14 @@ func TestVmDeployWithTransferAndGasShouldDeploySCCode(t *testing.T) {
 		senderNonce,
 		senderAddressBytes,
 		senderBalance,
-		vm.ArgEnableEpoch{},
+		config.EnableEpochs{},
 	)
 	require.Nil(t, err)
 	defer testContext.Close()
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err := testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 
 	_, err = testContext.Accounts.Commit()
 	require.Nil(t, err)
@@ -108,7 +114,7 @@ func TestVmSCDeployFactory(t *testing.T) {
 		senderNonce,
 		senderAddressBytes,
 		senderBalance,
-		vm.ArgEnableEpoch{},
+		config.EnableEpochs{},
 	)
 	require.Nil(t, err)
 	defer testContext.Close()
@@ -154,7 +160,7 @@ func TestSCMoveBalanceBeforeSCDeploy(t *testing.T) {
 		ownerNonce,
 		ownerAddressBytes,
 		ownerBalance,
-		vm.ArgEnableEpoch{
+		config.EnableEpochs{
 			PenalizedTooMuchGasEnableEpoch: 100,
 		},
 	)
@@ -197,9 +203,9 @@ func TestSCMoveBalanceBeforeSCDeploy(t *testing.T) {
 		arwen.CreateDeployTxData(scCode),
 	)
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err := testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 
 	_, err = testContext.Accounts.Commit()
 	require.Nil(t, err)
@@ -245,7 +251,7 @@ func TestWASMMetering(t *testing.T) {
 		ownerNonce,
 		ownerAddressBytes,
 		ownerBalance,
-		vm.ArgEnableEpoch{
+		config.EnableEpochs{
 			PenalizedTooMuchGasEnableEpoch: 100,
 		},
 	)
@@ -254,9 +260,9 @@ func TestWASMMetering(t *testing.T) {
 
 	scAddress, _ := testContext.BlockchainHook.NewAddress(ownerAddressBytes, ownerNonce, factory.ArwenVirtualMachine)
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err := testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 
 	_, err = testContext.Accounts.Commit()
 	require.Nil(t, err)
@@ -281,9 +287,9 @@ func TestWASMMetering(t *testing.T) {
 		Signature: nil,
 	}
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err = testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 
 	expectedBalance := big.NewInt(2998080)
 	expectedNonce := uint64(1)
@@ -372,7 +378,7 @@ func TestDeployERC20WithNotEnoughGasShouldReturnOutOfGas(t *testing.T) {
 		ownerAddressBytes,
 		ownerBalance,
 		gasSchedule,
-		vm.ArgEnableEpoch{},
+		config.EnableEpochs{},
 	)
 	require.Nil(t, err)
 	defer testContext.Close()
@@ -387,9 +393,9 @@ func TestDeployERC20WithNotEnoughGasShouldReturnOutOfGas(t *testing.T) {
 		arwen.CreateDeployTxData(scCode)+"@"+initialSupply,
 	)
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err := testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Equal(t, "out of gas", testContext.GetLatestError().Error())
+	require.Equal(t, returnCode, vmcommon.UserError)
 }
 
 func TestJournalizingAndTimeToProcessChange(t *testing.T) {
@@ -411,7 +417,7 @@ func TestJournalizingAndTimeToProcessChange(t *testing.T) {
 		ownerAddressBytes,
 		ownerBalance,
 		nil,
-		vm.ArgEnableEpoch{},
+		config.EnableEpochs{},
 	)
 	require.Nil(t, err)
 	defer testContext.Close()
@@ -427,9 +433,9 @@ func TestJournalizingAndTimeToProcessChange(t *testing.T) {
 		arwen.CreateDeployTxData(scCode)+"@00"+hex.EncodeToString(ownerBalance.Bytes()),
 	)
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err := testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 	ownerNonce++
 
 	alice := []byte("12345678901234567890123456789111")
@@ -445,9 +451,9 @@ func TestJournalizingAndTimeToProcessChange(t *testing.T) {
 	initAlice := big.NewInt(100000)
 	tx = vm.CreateTransferTokenTx(ownerNonce, "transferToken", initAlice, scAddress, ownerAddressBytes, alice)
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err = testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 
 	for j := 0; j < 2000; j++ {
 		start := time.Now()
@@ -455,9 +461,9 @@ func TestJournalizingAndTimeToProcessChange(t *testing.T) {
 		for i := 0; i < 1000; i++ {
 			tx = vm.CreateTransferTokenTx(aliceNonce, "transferToken", transferOnCalls, scAddress, alice, testAddresses[j*1000+i])
 
-			_, err = testContext.TxProcessor.ProcessTransaction(tx)
+			returnCode, err = testContext.TxProcessor.ProcessTransaction(tx)
 			require.Nil(t, err)
-			require.Nil(t, testContext.GetLatestError())
+			require.Equal(t, returnCode, vmcommon.Ok)
 			aliceNonce++
 		}
 
@@ -475,9 +481,9 @@ func TestJournalizingAndTimeToProcessChange(t *testing.T) {
 	for i := 0; i < numRun; i++ {
 		tx = vm.CreateTransferTokenTx(aliceNonce, "transferToken", transferOnCalls, scAddress, alice, testAddresses[i])
 
-		_, err = testContext.TxProcessor.ProcessTransaction(tx)
+		returnCode, err = testContext.TxProcessor.ProcessTransaction(tx)
 		require.Nil(t, err)
-		require.Nil(t, testContext.GetLatestError())
+		require.Equal(t, returnCode, vmcommon.Ok)
 
 		aliceNonce++
 	}
@@ -620,7 +626,7 @@ func TestAndCatchTrieError(t *testing.T) {
 		ownerAddressBytes,
 		ownerBalance,
 		nil,
-		vm.ArgEnableEpoch{},
+		config.EnableEpochs{},
 	)
 	require.Nil(t, err)
 	defer testContext.Close()
@@ -637,16 +643,16 @@ func TestAndCatchTrieError(t *testing.T) {
 		arwen.CreateDeployTxData(scCode)+"@"+initialSupply,
 	)
 
-	_, err = testContext.TxProcessor.ProcessTransaction(tx)
+	returnCode, err := testContext.TxProcessor.ProcessTransaction(tx)
 	require.Nil(t, err)
-	require.Nil(t, testContext.GetLatestError())
+	require.Equal(t, returnCode, vmcommon.Ok)
 	ownerNonce++
 
 	numAccounts := 100
 	testAddresses := createTestAddresses(uint64(numAccounts))
 	// ERD Minting
 	for _, testAddress := range testAddresses {
-		_, _ = vm.CreateAccount(testContext.Accounts, testAddress, 0, big.NewInt(1000000))
+		_, _ = vm.CreateAccount(testContext.Accounts, testAddress, 0, big.NewInt(0).Mul(big.NewInt(math.MaxUint64/2), big.NewInt(math.MaxUint64/2)))
 	}
 
 	accumulateAddress := createTestAddresses(1)[0]
@@ -657,9 +663,9 @@ func TestAndCatchTrieError(t *testing.T) {
 		tx = vm.CreateTransferTokenTx(ownerNonce, "transferToken", erc20value, scAddress, ownerAddressBytes, testAddress)
 		ownerNonce++
 
-		_, err = testContext.TxProcessor.ProcessTransaction(tx)
+		returnCode, err = testContext.TxProcessor.ProcessTransaction(tx)
 		require.Nil(t, err)
-		require.Nil(t, testContext.GetLatestError())
+		require.Equal(t, returnCode, vmcommon.Ok)
 	}
 
 	_, err = testContext.Accounts.Commit()
@@ -677,7 +683,6 @@ func TestAndCatchTrieError(t *testing.T) {
 
 			snapShot := testContext.Accounts.JournalLen()
 			_, _ = testContext.TxProcessor.ProcessTransaction(tx)
-			require.Nil(t, testContext.GetLatestError())
 
 			if index%5 == 0 {
 				errRevert := testContext.Accounts.RevertToSnapshot(snapShot)
@@ -702,7 +707,6 @@ func TestAndCatchTrieError(t *testing.T) {
 
 			snapShot := testContext.Accounts.JournalLen()
 			_, _ = testContext.TxProcessor.ProcessTransaction(tx)
-			require.Nil(t, testContext.GetLatestError())
 
 			if index%5 == 0 {
 				errRevert := testContext.Accounts.RevertToSnapshot(snapShot)
@@ -726,4 +730,205 @@ func TestAndCatchTrieError(t *testing.T) {
 		testContext.Accounts.PruneTrie(rootHash, state.OldRoot)
 		testContext.Accounts.PruneTrie(newRootHash, state.OldRoot)
 	}
+}
+
+func TestCommunityContract_InShard(t *testing.T) {
+	zero := big.NewInt(0)
+	transferEGLD := big.NewInt(42)
+
+	net := integrationTests.NewTestNetworkSized(t, 1, 1, 1)
+	net.Start()
+	net.Step()
+
+	net.CreateWallets(1)
+	net.MintWalletsUint64(100000000000)
+	owner := net.Wallets[0]
+
+	codePath := "../testdata/community"
+	funderCode := codePath + "/funder.wasm"
+	parentCode := codePath + "/parent.wasm"
+
+	funderAddress := net.DeployPayableSC(owner, funderCode)
+	funderSC := net.GetAccountHandler(funderAddress)
+	require.Equal(t, owner.Address, funderSC.GetOwnerAddress())
+
+	parentAddress := net.DeploySCWithInitArgs(
+		owner,
+		parentCode,
+		true,
+		funderAddress,
+	)
+
+	parentSC := net.GetAccountHandler(parentAddress)
+	require.Equal(t, owner.Address, parentSC.GetOwnerAddress())
+
+	txData := txDataBuilder.NewBuilder().Func("register").ToBytes()
+	tx := net.CreateTx(owner, parentAddress, transferEGLD, txData)
+	tx.GasLimit = 1_000_000
+
+	_ = net.SignAndSendTx(owner, tx)
+
+	net.Steps(2)
+	funderSC = net.GetAccountHandler(funderAddress)
+	require.Equal(t, transferEGLD, funderSC.GetBalance())
+	require.Equal(t, zero, parentSC.GetBalance())
+}
+
+func TestCommunityContract_CrossShard(t *testing.T) {
+	zero := big.NewInt(0)
+	transferEGLD := big.NewInt(42)
+
+	net := integrationTests.NewTestNetworkSized(t, 2, 1, 1)
+	net.Start()
+	net.Step()
+
+	net.CreateWallets(2)
+	net.MintWalletsUint64(100000000000)
+	ownerOfFunder := net.Wallets[0]
+
+	codePath := "../testdata/community"
+	funderCode := codePath + "/funder.wasm"
+	parentCode := codePath + "/parent.wasm"
+
+	funderAddress := net.DeployPayableSC(ownerOfFunder, funderCode)
+	funderSC := net.GetAccountHandler(funderAddress)
+	require.Equal(t, ownerOfFunder.Address, funderSC.GetOwnerAddress())
+
+	ownerOfParent := net.Wallets[1]
+	parentAddress := net.DeploySCWithInitArgs(
+		ownerOfParent,
+		parentCode,
+		true,
+		funderAddress,
+	)
+
+	parentSC := net.GetAccountHandler(parentAddress)
+	require.Equal(t, ownerOfParent.Address, parentSC.GetOwnerAddress())
+
+	txData := txDataBuilder.NewBuilder().Func("register").ToBytes()
+	tx := net.CreateTx(ownerOfParent, parentAddress, transferEGLD, txData)
+	tx.GasLimit = 1_000_000
+
+	_ = net.SignAndSendTx(ownerOfParent, tx)
+
+	net.Steps(8)
+	funderSC = net.GetAccountHandler(funderAddress)
+	require.Equal(t, transferEGLD, funderSC.GetBalance())
+
+	parentSC = net.GetAccountHandler(parentAddress)
+	require.Equal(t, zero, parentSC.GetBalance())
+}
+
+func TestCommunityContract_CrossShard_TxProcessor(t *testing.T) {
+	// Scenario:
+	// 1. Deploy FunderSC on shard 0, owned by funderOwner
+	// 2. Deploy ParentSC on shard 1, owned by parentOwner; deployment needs address of FunderSC
+	// 3. parentOwner sends tx to ParentSC with method call 'register' and 42 EGLD (in-shard call, shard 1)
+	// 4. ParentSC emits a cross-shard asyncCall to FunderSC with method 'acceptFunds' and 42 EGLD
+	// 5. assert FunderSC has 42 EGLD
+	zero := big.NewInt(0)
+	transferEGLD := big.NewInt(42)
+
+	testContextFunderSC, err := vm.CreatePreparedTxProcessorWithVMsMultiShard(0, config.EnableEpochs{})
+	require.Nil(t, err)
+	defer testContextFunderSC.Close()
+
+	testContextParentSC, err := vm.CreatePreparedTxProcessorWithVMsMultiShard(1, config.EnableEpochs{})
+	require.Nil(t, err)
+	defer testContextParentSC.Close()
+
+	funderOwner := []byte("12345678901234567890123456789010")
+	require.Equal(t, uint32(0), testContextFunderSC.ShardCoordinator.ComputeId(funderOwner))
+
+	parentOwner := []byte("12345678901234567890123456789011")
+	require.Equal(t, uint32(1), testContextParentSC.ShardCoordinator.ComputeId(parentOwner))
+
+	egldBalance := big.NewInt(1000000000000)
+
+	_, _ = vm.CreateAccount(testContextFunderSC.Accounts, funderOwner, 0, egldBalance)
+	_, _ = vm.CreateAccount(testContextParentSC.Accounts, parentOwner, 0, egldBalance)
+
+	gasPrice := uint64(10)
+	deployGasLimit := uint64(5000000)
+
+	codePath := "../testdata/community"
+	funderCode := codePath + "/funder.wasm"
+	parentCode := codePath + "/parent.wasm"
+
+	logger.ToggleLoggerName(true)
+	// logger.SetLogLevel("*:TRACE")
+
+	// Deploy Funder SC in shard 0
+	funderOwnerAccount, _ := testContextFunderSC.Accounts.LoadAccount(funderOwner)
+	funderAddress := utils.DoDeploySecond(t,
+		testContextFunderSC,
+		funderCode,
+		funderOwnerAccount,
+		gasPrice,
+		deployGasLimit,
+		nil,
+		zero)
+
+	// Deploy Parent SC in shard 1
+	parentOwnerAccount, _ := testContextParentSC.Accounts.LoadAccount(parentOwner)
+	args := [][]byte{[]byte(hex.EncodeToString(funderAddress))}
+	parentAddress := utils.DoDeploySecond(t,
+		testContextParentSC,
+		parentCode,
+		parentOwnerAccount,
+		gasPrice,
+		deployGasLimit,
+		args,
+		zero)
+
+	utils.CleanAccumulatedIntermediateTransactions(t, testContextFunderSC)
+	utils.CleanAccumulatedIntermediateTransactions(t, testContextParentSC)
+
+	// Prepare tx from ParentSC owner to ParentSC (same shard, 1)
+	gasLimit := uint64(5000000)
+	tx := vm.CreateTransaction(1,
+		transferEGLD,
+		parentOwner,
+		parentAddress,
+		gasPrice,
+		gasLimit,
+		[]byte("register"))
+
+	// execute on the sender shard, which emits an async call
+	// from ParentSC (shard 1) to FunderSC (shard 0)
+	retCode, err := testContextParentSC.TxProcessor.ProcessTransaction(tx)
+	require.Equal(t, vmcommon.Ok, retCode)
+	require.Nil(t, err)
+
+	intermediateTxs := testContextParentSC.GetIntermediateTransactions(t)
+	require.NotEmpty(t, intermediateTxs)
+
+	_, _ = testContextParentSC.Accounts.Commit()
+	_, _ = testContextFunderSC.Accounts.Commit()
+
+	utils.TestAccount(t, testContextParentSC.Accounts, parentAddress, 0, big.NewInt(0))
+
+	// execute async call on the FunderSC shard (shard 0)
+	scr := intermediateTxs[0]
+	require.Equal(t, transferEGLD, scr.GetValue())
+	require.Equal(t, parentAddress, scr.GetSndAddr())
+	require.Equal(t, funderAddress, scr.GetRcvAddr())
+	require.Equal(t, []byte("acceptFunds@01a5c7"), scr.GetData())
+	utils.ProcessSCRResult(t, testContextFunderSC, scr, vmcommon.Ok, nil)
+
+	intermediateTxs = testContextFunderSC.GetIntermediateTransactions(t)
+	require.NotEmpty(t, intermediateTxs)
+
+	_, _ = testContextParentSC.Accounts.Commit()
+	_, _ = testContextFunderSC.Accounts.Commit()
+
+	// return to the ParentSC shard (shard 1)
+	scr = intermediateTxs[0]
+	utils.ProcessSCRResult(t, testContextParentSC, scr, vmcommon.Ok, nil)
+
+	intermediateTxs = testContextParentSC.GetIntermediateTransactions(t)
+	require.NotEmpty(t, intermediateTxs)
+
+	utils.TestAccount(t, testContextParentSC.Accounts, parentAddress, 0, zero)
+	utils.TestAccount(t, testContextFunderSC.Accounts, funderAddress, 0, transferEGLD)
 }

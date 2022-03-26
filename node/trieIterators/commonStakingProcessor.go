@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ElrondNetwork/elrond-go-core/core/check"
 	"github.com/ElrondNetwork/elrond-go-core/data"
 	"github.com/ElrondNetwork/elrond-go/epochStart"
 	"github.com/ElrondNetwork/elrond-go/process"
@@ -89,16 +88,6 @@ func (csp *commonStakingProcessor) getValidatorUnstakedValue(validatorAddress []
 }
 
 func (csp *commonStakingProcessor) getAccount(scAddress []byte) (state.UserAccountHandler, error) {
-	currentHeader := csp.blockChain.GetCurrentBlockHeader()
-	if check.IfNil(currentHeader) {
-		return nil, ErrNodeNotInitialized
-	}
-
-	err := csp.accounts.RecreateTrie(currentHeader.GetRootHash())
-	if err != nil {
-		return nil, err
-	}
-
 	accountHandler, err := csp.accounts.GetExistingAccount(scAddress)
 	if err != nil {
 		return nil, err
