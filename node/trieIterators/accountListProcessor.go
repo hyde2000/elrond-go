@@ -55,6 +55,7 @@ func (acp *accountListProcessor) GetAccountsList() ([]*api.Account, error) {
 		return nil, err
 	}
 
+	log.Debug("having leaves", "leaves", len(chLeaves))
 	accList := make([]*api.Account, 0)
 	for leaf := range chLeaves {
 		userAccount, errUnmarshal := unmarshalUserAccount(leaf.Key(), leaf.Value(), acp.marshalizer)
