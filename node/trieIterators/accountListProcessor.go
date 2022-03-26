@@ -45,11 +45,13 @@ func (acp *accountListProcessor) GetAccountsList() ([]*api.Account, error) {
 		return nil, ErrNodeNotInitialized
 	}
 
+	log.Debug("recreating trie")
 	err := acp.accounts.RecreateTrie(currentHeader.GetRootHash())
 	if err != nil {
 		return nil, err
 	}
 
+	log.Debug("loading leaves")
 	chLeaves, err := acp.accounts.GetAllLeaves(currentHeader.GetRootHash())
 	if err != nil {
 		return nil, err
