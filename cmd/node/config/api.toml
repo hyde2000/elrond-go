@@ -106,13 +106,13 @@
 
         # /network/direct-staked-info will return a list containing direct staked list of addresses
         # and their staked values
-        {Name = "/direct-staked-info", Open = true},
+        { Name = "/direct-staked-info", Open = true},
 
         # /network/delegated-info will return a list containing delegated list of addresses
         # and their staked values on the system delegation smart contracts
-        {Name = "/delegated-info", Open = true},
+        { Name = "/delegated-info", Open = true},
         {Name = "/accounts-info", Open = true}
-	]
+    ]
 
 [APIPackages.log]
     Routes = [
@@ -159,7 +159,7 @@
         { Name = "/cost", Open = true },
 
         # /transaction/:txhash will return the transaction in JSON format based on its hash
-        { Name = "/:txhash", Open = true },
+       { Name = "/:txhash", Open = true },
     ]
 
 [APIPackages.block]
