@@ -8,9 +8,11 @@ import (
 	"github.com/ElrondNetwork/elrond-go-core/core/check"
 	"github.com/ElrondNetwork/elrond-go-core/data/api"
 	"github.com/ElrondNetwork/elrond-go-core/marshal"
+	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/ElrondNetwork/elrond-go/state"
 )
 
+var log = logger.GetOrCreate("trieiterators/accountList")
 type accountListProcessor struct {
 	*commonStakingProcessor
 	publicKeyConverter core.PubkeyConverter
