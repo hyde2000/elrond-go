@@ -41,6 +41,7 @@ func NewAccountListProcessor(arg ArgTrieIteratorProcessor) (*accountListProcesso
 func (acp *accountListProcessor) GetAccountsList() ([]*api.Account, error) {
 	fmt.Println("================== Getting account list")
 	currentHeader := acp.blockChain.GetCurrentBlockHeader()
+
 	if check.IfNil(currentHeader) {
 		return nil, ErrNodeNotInitialized
 	}
