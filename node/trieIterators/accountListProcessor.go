@@ -1,6 +1,7 @@
 package trieIterators
 
 import (
+	"fmt"
 	"math/big"
 
 	"github.com/ElrondNetwork/elrond-go-core/core"
@@ -36,6 +37,7 @@ func NewAccountListProcessor(arg ArgTrieIteratorProcessor) (*accountListProcesso
 
 // GetAccountsList creates a list of all accounts in the trie with their balances
 func (acp *accountListProcessor) GetAccountsList() ([]*api.Account, error) {
+	fmt.Println("================== Getting account list")
 	currentHeader := acp.blockChain.GetCurrentBlockHeader()
 	if check.IfNil(currentHeader) {
 		return nil, ErrNodeNotInitialized

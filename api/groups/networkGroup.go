@@ -303,6 +303,7 @@ func (ng *networkGroup) getESDTTokenSupply(c *gin.Context) {
 }
 
 func (ng *networkGroup) accountsInfo(c *gin.Context) {
+	log.Debug("Getting account list route")
 	facade := ng.getFacade()
 	accountList, err := facade.GetAccountList()
 	if err != nil {
