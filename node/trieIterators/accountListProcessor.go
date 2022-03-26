@@ -57,7 +57,7 @@ func (acp *accountListProcessor) GetAccountsList() ([]*api.Account, error) {
 	for leaf := range chLeaves {
 		userAccount, errUnmarshal := unmarshalUserAccount(leaf.Key(), leaf.Value(), acp.marshalizer)
 		if errUnmarshal != nil {
-			// log.Debug("cannot unmarshal genesis user account. it may be a code leaf", "error", errUnmarshal)
+			log.Debug("cannot unmarshal genesis user account. it may be a code leaf", "error", errUnmarshal)
 			continue
 		}
 
