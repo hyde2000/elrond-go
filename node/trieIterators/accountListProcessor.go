@@ -1,18 +1,15 @@
 package trieIterators
 
 import (
-	"fmt"
 	"math/big"
 
 	"github.com/ElrondNetwork/elrond-go-core/core"
 	"github.com/ElrondNetwork/elrond-go-core/core/check"
 	"github.com/ElrondNetwork/elrond-go-core/data/api"
 	"github.com/ElrondNetwork/elrond-go-core/marshal"
-	logger "github.com/ElrondNetwork/elrond-go-logger"
 	"github.com/ElrondNetwork/elrond-go/state"
 )
 
-var log = logger.GetOrCreate("trieiterators/accountList")
 type accountListProcessor struct {
 	*commonStakingProcessor
 	publicKeyConverter core.PubkeyConverter
@@ -39,25 +36,21 @@ func NewAccountListProcessor(arg ArgTrieIteratorProcessor) (*accountListProcesso
 
 // GetAccountsList creates a list of all accounts in the trie with their balances
 func (acp *accountListProcessor) GetAccountsList() ([]*api.Account, error) {
-	fmt.Println("================== Getting account list")
 	currentHeader := acp.blockChain.GetCurrentBlockHeader()
 
 	if check.IfNil(currentHeader) {
 		return nil, ErrNodeNotInitialized
 	}
 
-	log.Debug("loading leaves")
 	chLeaves, err := acp.accounts.GetAllLeaves(currentHeader.GetRootHash())
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debug("having leaves", "leaves", len(chLeaves))
 	accList := make([]*api.Account, 0)
 	for leaf := range chLeaves {
 		userAccount, errUnmarshal := unmarshalUserAccount(leaf.Key(), leaf.Value(), acp.marshalizer)
 		if errUnmarshal != nil {
-			log.Debug("cannot unmarshal genesis user account. it may be a code leaf", "error", errUnmarshal)
 			continue
 		}
 
