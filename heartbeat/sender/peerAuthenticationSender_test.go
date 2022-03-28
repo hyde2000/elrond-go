@@ -19,7 +19,6 @@ import (
 	"github.com/ElrondNetwork/elrond-go/heartbeat"
 	"github.com/ElrondNetwork/elrond-go/heartbeat/mock"
 	"github.com/ElrondNetwork/elrond-go/sharding/nodesCoordinator"
-	"github.com/ElrondNetwork/elrond-go/testscommon/cryptoMocks"
 	"github.com/ElrondNetwork/elrond-go/testscommon/shardingMocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,8 +27,8 @@ func createMockPeerAuthenticationSenderArgs(argBase argBaseSender) argPeerAuthen
 	return argPeerAuthenticationSender{
 		argBaseSender:        argBase,
 		nodesCoordinator:     &shardingMocks.NodesCoordinatorStub{},
-		peerSignatureHandler: &cryptoMocks.PeerSignatureHandlerStub{},
-		privKey:              &cryptoMocks.PrivateKeyStub{},
+		peerSignatureHandler: &mock.PeerSignatureHandlerStub{},
+		privKey:              &mock.PrivateKeyStub{},
 		redundancyHandler:    &mock.RedundancyHandlerStub{},
 	}
 }

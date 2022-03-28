@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/ElrondNetwork/elrond-go/heartbeat/mock"
-	"github.com/ElrondNetwork/elrond-go/testscommon/p2pmocks"
 	"github.com/stretchr/testify/assert"
 )
 
 func createMockBaseArgs() argBaseSender {
 	return argBaseSender{
-		messenger:                 &p2pmocks.MessengerStub{},
+		messenger:                 &mock.MessengerStub{},
 		marshaller:                &mock.MarshallerMock{},
 		topic:                     "topic",
 		timeBetweenSends:          time.Second,

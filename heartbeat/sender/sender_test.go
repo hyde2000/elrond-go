@@ -10,7 +10,6 @@ import (
 	"github.com/ElrondNetwork/elrond-go-core/core/check"
 	"github.com/ElrondNetwork/elrond-go/heartbeat"
 	"github.com/ElrondNetwork/elrond-go/heartbeat/mock"
-	"github.com/ElrondNetwork/elrond-go/testscommon/cryptoMocks"
 	"github.com/ElrondNetwork/elrond-go/testscommon/shardingMocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -32,8 +31,8 @@ func createMockSenderArgs() ArgSender {
 		Identity:                                    "identity",
 		PeerSubType:                                 core.RegularPeer,
 		CurrentBlockProvider:                        &mock.CurrentBlockProviderStub{},
-		PeerSignatureHandler:                        &cryptoMocks.PeerSignatureHandlerStub{},
-		PrivateKey:                                  &cryptoMocks.PrivateKeyStub{},
+		PeerSignatureHandler:                        &mock.PeerSignatureHandlerStub{},
+		PrivateKey:                                  &mock.PrivateKeyStub{},
 		RedundancyHandler:                           &mock.RedundancyHandlerStub{},
 		NodesCoordinator:                            &shardingMocks.NodesCoordinatorStub{},
 	}

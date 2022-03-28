@@ -15,7 +15,6 @@ import (
 	"github.com/ElrondNetwork/elrond-go/heartbeat/mock"
 	"github.com/ElrondNetwork/elrond-go/p2p/message"
 	"github.com/ElrondNetwork/elrond-go/process"
-	"github.com/ElrondNetwork/elrond-go/testscommon"
 	"github.com/ElrondNetwork/elrond-go/testscommon/p2pmocks"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +23,7 @@ func createMockArgDirectConnectionsProcessor() ArgDirectConnectionsProcessor {
 	return ArgDirectConnectionsProcessor{
 		Messenger:                 &p2pmocks.MessengerStub{},
 		Marshaller:                &mock.MarshallerStub{},
-		ShardCoordinator:          &testscommon.ShardsCoordinatorMock{},
+		ShardCoordinator:          &mock.ShardCoordinatorMock{},
 		DelayBetweenNotifications: time.Second,
 	}
 }
