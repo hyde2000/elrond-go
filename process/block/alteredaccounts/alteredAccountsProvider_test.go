@@ -726,6 +726,7 @@ func testExtractAlteredAccountsFromPoolAddressHasMultipleNfts(t *testing.T) {
 			return nil, false, nil
 		},
 	}
+
 	args.AccountsDB = &state.AccountsStub{
 		LoadAccountCalled: func(_ []byte) (vmcommon.AccountHandler, error) {
 			return &state.UserAccountStub{
