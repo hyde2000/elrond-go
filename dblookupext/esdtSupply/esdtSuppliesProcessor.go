@@ -13,6 +13,7 @@ import (
 	"github.com/ElrondNetwork/elrond-go/storage"
 )
 
+const debuggingMessage = "[esdt supply debug] "
 var log = logger.GetOrCreate("dblookupext/esdtSupply")
 
 type suppliesProcessor struct {
@@ -54,6 +55,10 @@ func (sp *suppliesProcessor) ProcessLogs(blockNonce uint64, logs []*data.LogData
 	logsMap := make(map[string]*data.LogData)
 	for _, logData := range logs {
 		if logData != nil {
+			_, alreadyExists := logsMap[logData.TxHash]
+			if alreadyExists {
+				log.Error(debuggingMessage + "tx hash already exists in map", "tx hash", logData.TxHash)
+			}
 			logsMap[logData.TxHash] = logData
 		}
 	}
@@ -67,6 +72,7 @@ func (sp *suppliesProcessor) RevertChanges(header data.HeaderHandler, body data.
 		return nil
 	}
 
+	log.Debug(debuggingMessage+"suppliesProcessor.RevertChanges")
 	sp.mutex.Lock()
 	defer sp.mutex.Unlock()
 

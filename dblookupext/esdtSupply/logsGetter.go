@@ -81,7 +81,7 @@ func (lg *logsGetter) getTxLog(txHash []byte) (data.LogHandler, bool, error) {
 	logFromDB := &transaction.Log{}
 	err = lg.marshalizer.Unmarshal(logFromDB, logBytes)
 	if err != nil {
-		log.Warn("logsGetter.getTxLog cannot unmarshal log",
+		log.Warn(debuggingMessage+"logsGetter.getTxLog cannot unmarshal log",
 			"error", err,
 			"txHash", hex.EncodeToString(txHash),
 		)

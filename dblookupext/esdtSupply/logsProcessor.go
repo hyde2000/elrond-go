@@ -49,6 +49,7 @@ func (lp *logsProcessor) processLogs(blockNonce uint64, logs map[string]*data.Lo
 		return err
 	}
 	if !shouldProcess {
+		log.Debug(debuggingMessage+" should not process", "block nonce", blockNonce, "is revert", isRevert)
 		return nil
 	}
 
@@ -128,6 +129,12 @@ func (lp *logsProcessor) processEvent(txLog *transaction.Event, supplies map[str
 	valueFromEvent := big.NewInt(0).SetBytes(txLog.Topics[2])
 
 	tokenIDStr := string(tokenIdentifier)
+	if tokenIDStr == "ETHUSDC-745924" {
+		log.Debug(debuggingMessage+"processing ETHUSDC-745924 log",
+			"event id", string(txLog.Identifier),
+			"value from event", valueFromEvent.String(),
+			"is revert", isRevert)
+	}
 	tokenSupply, found := supplies[tokenIDStr]
 	if found {
 		lp.updateTokenSupply(tokenSupply, valueFromEvent, string(txLog.Identifier), isRevert)
